@@ -7,6 +7,10 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 public class IterableUtility {
+
+    private IterableUtility() {
+    }
+
     public static String getMsg(
             List<String> list,
             String prefix,

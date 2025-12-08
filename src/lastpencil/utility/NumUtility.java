@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public class NumUtility {
+    private NumUtility() {
+    }
+
     public static int getNumGreaterThanX(int x, BufferedReader br) throws IOException {
         int num = Integer.parseInt(br.readLine().trim());
 
