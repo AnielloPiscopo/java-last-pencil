@@ -2,6 +2,7 @@ package lastpencil.service;
 
 
 import lastpencil.exception.ManyPencilsTakenException;
+import lastpencil.exception.NotEnoughPlayersException;
 import lastpencil.pojo.Player;
 import lastpencil.utility.IterableUtility;
 import lastpencil.utility.NumUtility;
@@ -16,10 +17,11 @@ import java.util.Random;
 import java.util.stream.IntStream;
 
 public class LastPencilService {
+    private static final Random RANDOM = new Random();
+    private int pencilsNum;
     private final List<Player> PLAYERS_LIST;
     private final List<String> PLAYERS_NAMES_LIST;
     private final int MAX_PENCILS_NUM_TO_GET;
-    private int pencilsNum;
     private Player currentPlayer;
 
     public LastPencilService(int maxPencilsToGet, String... players) {
@@ -28,11 +30,10 @@ public class LastPencilService {
         final List<Player> tempPlayersList = new ArrayList<>();
 
         if (players.length == 0) {
-            tempPlayersList.add(new Player("Jack", true));
-            tempPlayersList.add(new Player("Jack", true));
+            throw new NotEnoughPlayersException();
         } else if (players.length == 1) {
             tempPlayersList.add(new Player(players[0]));          // human
-            tempPlayersList.add(new Player("Jack", true));        // bot
+            tempPlayersList.add(new Player("Jack", "bot"));        // bot
         } else {
             tempPlayersList.add(new Player(players[0]));
             tempPlayersList.add(new Player(players[1]));
@@ -87,7 +88,7 @@ public class LastPencilService {
     }
 
     private void setFirstPlayer(BufferedReader br) throws IOException {
-        System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Who will be the first (", ", ", "):"));
+        System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Who will be the first (", ", ",null ,"):"));
 
         boolean isFirstPlayerValid = false;
 
@@ -96,7 +97,7 @@ public class LastPencilService {
                 currentPlayer = IterableUtility.getValueInList(PLAYERS_LIST, Player::getName, br);
                 isFirstPlayerValid = true;
             } catch (NoSuchElementException e) {
-                System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Choose between '", "' and '", "'"));
+                System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Choose between '", "' and '",null ,"'"));
             }
         } while (!isFirstPlayerValid);
     }
@@ -104,7 +105,7 @@ public class LastPencilService {
     private void playTurn(BufferedReader br) throws IOException {
         printStarterInfoOfTurn();
 
-        if (currentPlayer.isABot()) {
+        if (currentPlayer.getPlayerTypeStr().equalsIgnoreCase("bot")) {
             playAsABot();
         } else {
             playAsAHuman(br);
@@ -112,9 +113,7 @@ public class LastPencilService {
     }
 
     private void printStarterInfoOfTurn() {
-        for (int i = 1; i <= pencilsNum; i++) {
-            System.out.print("|");
-        }
+        System.out.println("|".repeat(pencilsNum));
 
         System.out.println();
 
@@ -130,7 +129,7 @@ public class LastPencilService {
             botMove = (pencilsNum - 1) % (MAX_PENCILS_NUM_TO_GET + 1);
 
             botMove = (botMove == 0) ?
-                    Math.min(new Random().nextInt(MAX_PENCILS_NUM_TO_GET) + 1, pencilsNum) :
+                    Math.min(RANDOM.nextInt(MAX_PENCILS_NUM_TO_GET) + 1, pencilsNum) :
                     Math.min(botMove, pencilsNum);
         }
 

@@ -8,7 +8,7 @@ public class NumUtility {
         int num = Integer.parseInt(br.readLine().trim());
 
         if (num <= x) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Number must be greater than " + x);
         }
 
         return num;
@@ -18,7 +18,7 @@ public class NumUtility {
         int num = Integer.parseInt(br.readLine().trim());
 
         if(num<=min || num>max){
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Number must be between " + min + " and " + max);
         }
 
         return num;
