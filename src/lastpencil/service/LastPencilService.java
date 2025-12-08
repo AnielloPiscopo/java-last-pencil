@@ -15,6 +15,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 
+/**
+ * Main orchestrator of the Last Pencil game.
+ * It handles input/output, user interaction and delegates
+ * game logic to the dedicated services.
+ */
 public class LastPencilService {
     private final LastPencilBotService botService;
     private final LastPencilGameService gameService;
@@ -22,6 +27,12 @@ public class LastPencilService {
     private final List<String> PLAYERS_NAMES_LIST;
     private final int MAX_PENCILS_NUM_TO_GET;
 
+    /**
+     * Creates the main game service and initializes players.
+     *
+     * @param maxPencilsToGet maximum number of pencils per move
+     * @param players         player names
+     */
     public LastPencilService(int maxPencilsToGet, String... players) {
         MAX_PENCILS_NUM_TO_GET = maxPencilsToGet;
 
@@ -47,6 +58,9 @@ public class LastPencilService {
         this.botService = new LastPencilBotService();
     }
 
+    /**
+     * Starts the game and manages the main execution flow.
+     */
     public void start() {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
             setPencilNum(br);
@@ -58,6 +72,9 @@ public class LastPencilService {
         }
     }
 
+    /**
+     * Reads and validates the initial number of pencils.
+     */
     private void setPencilNum(BufferedReader br) throws IOException {
         System.out.println("How many pencils would you like to use:");
 
@@ -76,6 +93,9 @@ public class LastPencilService {
         } while (!isPencilNumValid);
     }
 
+    /**
+     * Main game loop.
+     */
     private void play(BufferedReader br) throws IOException {
         setFirstPlayer(br);
 
@@ -92,6 +112,9 @@ public class LastPencilService {
         } while (true);
     }
 
+    /**
+     * Handles the choice of the first player.
+     */
     private void setFirstPlayer(BufferedReader br) throws IOException {
         System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Who will be the first (", ", ", null, "):"));
 
@@ -108,6 +131,9 @@ public class LastPencilService {
         } while (!isFirstPlayerValid);
     }
 
+    /**
+     * Executes the current player's turn.
+     */
     private void playTurn(BufferedReader br) throws IOException {
         Player currentPlayer = gameService.getCurrentPlayer();
 
@@ -118,12 +144,18 @@ public class LastPencilService {
         }
     }
 
+    /**
+     * Prints the current state of the game before a move.
+     */
     private void printStarterInfoOfTurn() {
         System.out.println("|".repeat(gameService.getPencilsNum()));
         System.out.println();
         System.out.println(gameService.getCurrentPlayer().getName() + "'s turn!");
     }
 
+    /**
+     * Handles the human player's input and validation.
+     */
     private void playAsAHuman(BufferedReader br) throws IOException {
         boolean isPencilsNumGottenValid = false;
 
