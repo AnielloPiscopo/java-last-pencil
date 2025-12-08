@@ -13,16 +13,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Random;
 import java.util.stream.IntStream;
 
 public class LastPencilService {
-    private static final Random RANDOM = new Random();
-    private int pencilsNum;
+    private final LastPencilBotService botService;
+    private final LastPencilGameService gameService;
     private final List<Player> PLAYERS_LIST;
     private final List<String> PLAYERS_NAMES_LIST;
     private final int MAX_PENCILS_NUM_TO_GET;
-    private Player currentPlayer;
 
     public LastPencilService(int maxPencilsToGet, String... players) {
         MAX_PENCILS_NUM_TO_GET = maxPencilsToGet;
@@ -32,8 +30,8 @@ public class LastPencilService {
         if (players.length == 0) {
             throw new NotEnoughPlayersException();
         } else if (players.length == 1) {
-            tempPlayersList.add(new Player(players[0]));          // human
-            tempPlayersList.add(new Player("Jack", "bot"));        // bot
+            tempPlayersList.add(new Player(players[0]));
+            tempPlayersList.add(new Player("Jack", "bot"));
         } else {
             tempPlayersList.add(new Player(players[0]));
             tempPlayersList.add(new Player(players[1]));
@@ -44,6 +42,9 @@ public class LastPencilService {
         this.PLAYERS_NAMES_LIST = this.PLAYERS_LIST.stream()
                 .map(Player::getName)
                 .toList();
+
+        this.gameService = new LastPencilGameService(this.PLAYERS_LIST);
+        this.botService = new LastPencilBotService();
     }
 
     public void start() {
@@ -64,7 +65,8 @@ public class LastPencilService {
 
         do {
             try {
-                pencilsNum = NumUtility.getNumGreaterThanX(0, br);
+                int pencilsNum = NumUtility.getNumGreaterThanX(0, br);
+                gameService.setPencilsNum(pencilsNum);
                 isPencilNumValid = true;
             } catch (NumberFormatException e) {
                 System.out.println("The number of pencils should be numeric");
@@ -78,64 +80,48 @@ public class LastPencilService {
         setFirstPlayer(br);
 
         do {
+            printStarterInfoOfTurn();
             playTurn(br);
-            currentPlayer = PLAYERS_LIST.get(
-                    (PLAYERS_LIST.indexOf(currentPlayer) + 1) % PLAYERS_LIST.size()
-            );
-        } while (pencilsNum > 0);
+            if (gameService.isGameOver()) {
+                gameService.switchTurn();
 
-        System.out.println(currentPlayer.getName() + " won!");
+                System.out.println(gameService.getCurrentPlayer().getName() + " won!");
+                return;
+            }
+            gameService.switchTurn();
+        } while (true);
     }
 
     private void setFirstPlayer(BufferedReader br) throws IOException {
-        System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Who will be the first (", ", ",null ,"):"));
+        System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Who will be the first (", ", ", null, "):"));
 
         boolean isFirstPlayerValid = false;
 
         do {
             try {
-                currentPlayer = IterableUtility.getValueInList(PLAYERS_LIST, Player::getName, br);
+                Player firstPlayer = IterableUtility.getValueInList(PLAYERS_LIST, Player::getName, br);
+                gameService.setCurrentPlayer(firstPlayer);
                 isFirstPlayerValid = true;
             } catch (NoSuchElementException e) {
-                System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Choose between '", "' and '",null ,"'"));
+                System.out.println(IterableUtility.getMsg(PLAYERS_NAMES_LIST, "Choose between '", "' and '", null, "'"));
             }
         } while (!isFirstPlayerValid);
     }
 
     private void playTurn(BufferedReader br) throws IOException {
-        printStarterInfoOfTurn();
+        Player currentPlayer = gameService.getCurrentPlayer();
 
         if (currentPlayer.getPlayerTypeStr().equalsIgnoreCase("bot")) {
-            playAsABot();
+            gameService.applyMove(botService.getBotMove(gameService.getPencilsNum(), MAX_PENCILS_NUM_TO_GET));
         } else {
             playAsAHuman(br);
         }
     }
 
     private void printStarterInfoOfTurn() {
-        System.out.println("|".repeat(pencilsNum));
-
+        System.out.println("|".repeat(gameService.getPencilsNum()));
         System.out.println();
-
-        System.out.println(currentPlayer.getName() + "'s turn!");
-    }
-
-    private void playAsABot() {
-        int botMove;
-
-        if (pencilsNum == 1) {
-            botMove = 1;
-        } else {
-            botMove = (pencilsNum - 1) % (MAX_PENCILS_NUM_TO_GET + 1);
-
-            botMove = (botMove == 0) ?
-                    Math.min(RANDOM.nextInt(MAX_PENCILS_NUM_TO_GET) + 1, pencilsNum) :
-                    Math.min(botMove, pencilsNum);
-        }
-
-        System.out.println(botMove);
-
-        pencilsNum -= botMove;
+        System.out.println(gameService.getCurrentPlayer().getName() + "'s turn!");
     }
 
     private void playAsAHuman(BufferedReader br) throws IOException {
@@ -145,11 +131,8 @@ public class LastPencilService {
             try {
                 int pencilsToGet = NumUtility.getNumInRange(0, MAX_PENCILS_NUM_TO_GET, br);
 
-                if (pencilsToGet > pencilsNum) {
-                    throw new ManyPencilsTakenException();
-                }
+                gameService.applyMove(pencilsToGet);
 
-                pencilsNum -= pencilsToGet;
                 isPencilsNumGottenValid = true;
             } catch (IllegalArgumentException e) {
                 List<String> list = IntStream
