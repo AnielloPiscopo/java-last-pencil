@@ -1,0 +1,20 @@
+# === BUILD OUTPUT ===
+/build/
+/out/
+
+# === IntelliJ / JetBrains ===
+.idea/
+*.iml
+
+# === Java Compiled ===
+*.class
+
+# === Logs ===
+*.log
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Test / Coverage ===
+/target/
